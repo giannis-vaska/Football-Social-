@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="el">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -165,7 +165,7 @@ $("#list").onclick = e => {
   else if (t.open){ openId = t.open; tab = "players"; render(); }
   else if (t.pedit){ pdraft = {...cur().players.find(p => p.id === t.pedit)}; render(); }
   else if (t.tab){ tab = t.tab; pdraft = null; mdraft = null; render(); }
-  else if (t.gfx){ gview = {mid: t.gfx, type: "matchday", fmt: "post", lang: "el"}; render(); }
+  else if (t.gfx){ gview = {mid: t.gfx, type: "matchday", fmt: "post", lang: "en"}; render(); }
   else if (t.gback){ gview = null; render(); }
   else if (t.medit){ gview = null; mdraft = {...cur().matches.find(x => x.id === t.medit), nn: "", nl: ""}; render(); }
   else if (t.back){ openId = null; pdraft = null; mdraft = null; gview = null; render(); }
@@ -675,7 +675,7 @@ async function drawDesign(c){
   const [im, bgi] = await Promise.all([loadImg(c.logo), tplImg(c, "post")]);
   if (tab !== "design" || !$("#dimg")) return;
   BGIMG = bgi; const ce = useTpl(c), d = new Date(Date.now() + 3 * 864e5).toLocaleDateString("sv-SE");
-  const cv = drawMatchday({c: ce, o: {name: "ΑΝΤΙΠΑΛΟΣ"}, m: {home: true, date: d, time: "18:00", venue: "ΓΗΠΕΔΟ", comp: "ΠΡΩΤΑΘΛΗΜΑ"}, la: im, lb: im, fmt: "post", lang: "el", type: "matchday"});
+  const cv = drawMatchday({c: ce, o: {name: "ΑΝΤΙΠΑΛΟΣ"}, m: {home: true, date: d, time: "18:00", venue: "ΓΗΠΕΔΟ", comp: "ΠΡΩΤΑΘΛΗΜΑ"}, la: im, lb: im, fmt: "post", lang: "en", type: "matchday"});
   $("#dimg").src = cv.toDataURL("image/png");
 }
 
@@ -871,7 +871,7 @@ function renderGraphic(){
   <label>Graphic<select id="gtype"><option value="matchday">Matchday</option><option value="hype">Next match countdown</option><option value="lineup">Starting lineup</option><option value="ht">Half time score</option><option value="ft">Final score</option></select></label>
   <div class="row">
     <label>Format<select id="gfmt"><option value="post">Post (4:5)</option><option value="story">Story (9:16)</option></select></label>
-    <label>Language<select id="glang"><option value="el">Greek</option><option value="en">English</option></select></label>
+    <label>Language<select id="glang"><option value="en">English</option><option value="el">Greek</option></select></label>
   </div>
   
   <div id="sbox" hidden></div>
