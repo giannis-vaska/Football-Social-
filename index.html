@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Club Graphics</title>
-<link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;600;800&family=Roboto+Condensed:wght@600;800&family=Fira+Sans+Condensed:wght@600;800&family=Montserrat:wght@600;800&family=Roboto+Slab:wght@600;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#eef1f4;--card:#fff;--ink:#14213d;--mute:#5d6b82;--line:#cbd2db;--accent:#1f4fd8;--on-accent:#fff;--danger:#b3261e;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1624;--card:#18223a;--ink:#eaf0fb;--mute:#9aa8c2;--line:#2c3a58;--accent:#6c93ff;--on-accent:#0f1624;--danger:#ff8a80;color-scheme:dark}}
@@ -48,6 +48,7 @@ select{font:inherit;padding:11px;border-radius:10px;border:1px solid var(--line)
 .tabs .on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
 .past{opacity:.65}
 #bk{margin-top:28px}
+textarea{font:inherit;font-size:13px;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
 .gl{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line)}
 .gl span{min-width:0;overflow-wrap:anywhere}
 .gimg{width:100%;height:auto;border-radius:8px;background:var(--bg)}
@@ -118,14 +119,14 @@ function formHtml(){
 function render(){
   $("#bk").hidden = !!openId;
   if (openId && gview) return renderGraphic();
-  if (openId) return tab === "matches" ? renderMatches() : renderPlayers();
+  if (openId) return tab === "matches" ? renderMatches() : tab === "design" ? renderDesign() : renderPlayers();
   $("#head").innerHTML = `<h1>Clubs</h1><p class="sub">Add each club once. Its logo and colors are reused in every graphic.</p>`;
   $("#add").textContent = "Add club"; $("#bk").hidden = !!draft;
   $("#add").hidden = !!draft;
   if (draft){ $("#list").innerHTML = ""; $("#formWrap").innerHTML = formHtml(); bind(); return; }
   $("#formWrap").innerHTML = "";
   $("#list").innerHTML = clubs.length
-    ? clubs.map(c => `<div class="club"><img src="${c.logo}" alt=""><div class="info"><b>${esc(c.name)}</b><span class="sw" style="background:${c.c1}"></span><span class="sw" style="background:${c.c2}"></span></div><button data-open="${c.id}">Players</button><button data-edit="${c.id}">Edit</button></div>`).join("")
+    ? clubs.map(c => `<div class="club"><img src="${c.logo}" alt=""><div class="info"><b>${esc(c.name)}</b><span class="sw" style="background:${c.c1}"></span><span class="sw" style="background:${c.c2}"></span></div><button data-open="${c.id}">MENU</button><button data-edit="${c.id}">Edit</button></div>`).join("")
     : `<div class="empty">No clubs yet. Add your first club to get started.</div>`;
 }
 
@@ -244,7 +245,7 @@ const saveO = () => { try { localStorage.setItem(OKEY, JSON.stringify(opps)); re
 let tab = "players", mdraft = null;
 
 const headHtml = c => `<div class="top"><button data-back="1">Back</button><img src="${c.logo}" alt=""><h1>${esc(c.name)}</h1></div>
-<div class="tabs"><button data-tab="players" ${tab === "players" ? 'class="on"' : ""}>Players</button><button data-tab="matches" ${tab === "matches" ? 'class="on"' : ""}>Matches</button></div>`;
+<div class="tabs"><button data-tab="players" ${tab === "players" ? 'class="on"' : ""}>Players</button><button data-tab="matches" ${tab === "matches" ? 'class="on"' : ""}>Matches</button><button data-tab="design" ${tab === "design" ? 'class="on"' : ""}>Design</button></div>`;
 
 function renderMatches(){
   const c = cur();
@@ -336,7 +337,7 @@ const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onlo
 function lum(h){ const n = parseInt(h.slice(1), 16), f = v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }; return .2126 * f(n >> 16) + .7152 * f((n >> 8) & 255) + .0722 * f(n & 255); }
 function mix(h, k){ const n = parseInt(h.slice(1), 16); return `rgb(${((n >> 16) * k) | 0},${(((n >> 8) & 255) * k) | 0},${((n & 255) * k) | 0})`; }
 function wrap(x, text, maxW){ const lines = []; let cur = ""; for (const w of text.split(" ")){ const t = cur ? cur + " " + w : w; if (x.measureText(t).width > maxW && cur){ lines.push(cur); cur = w; } else cur = t; } lines.push(cur); return lines; }
-function fitText(x, s, wt, size, max){ do { x.font = `${wt} ${size}px Commissioner, sans-serif`; size -= 2; } while (x.measureText(s).width > max && size > 20); }
+function fitText(x, s, wt, size, max){ do { x.font = `${wt} ${size}px ${FF}`; size -= 2; } while (x.measureText(s).width > max && size > 20); }
 
 function daysTo(d){ const a = new Date(d + "T00:00"), b = new Date(); b.setHours(0, 0, 0, 0); return Math.round((a - b) / 864e5); }
 function hypeLabel(d, lang){
@@ -353,35 +354,34 @@ function drawMatchday({c, o, m, la, lb, fmt, lang, type}){
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const x = cv.getContext("2d");
   x.imageSmoothingQuality = "high";
-  const light = lum(c.c1) > .45, txt = light ? "#10141f" : "#ffffff";
+  const light = lightOf(c), txt = light ? "#10141f" : "#ffffff";
   const acc = Math.abs(lum(c.c2) - lum(c.c1)) > .25 ? c.c2 : txt;
-  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c.c1); g.addColorStop(1, mix(c.c1, light ? .8 : .45));
-  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  paintBg(x, W, H, c, light);
   x.strokeStyle = txt; x.globalAlpha = .1; x.lineWidth = 6;
   x.beginPath(); x.moveTo(0, L.cy); x.lineTo(W, L.cy); x.stroke();
   x.beginPath(); x.arc(W / 2, L.cy, 430, 0, Math.PI * 2); x.stroke();
   x.globalAlpha = 1; x.textAlign = "center"; x.textBaseline = "alphabetic";
-  x.fillStyle = acc; x.font = "800 92px Commissioner, sans-serif";
+  x.fillStyle = acc; x.font = "800 92px " + FF;
   if ("letterSpacing" in x) x.letterSpacing = "6px";
   const lab = type === "hype" ? hypeLabel(m.date, lang) : (lang === "el" ? "ΗΜΕΡΑ ΑΓΩΝΑ" : "MATCHDAY");
   fitText(x, lab, 800, 92, 940); x.fillText(lab, W / 2, L.lab);
   if ("letterSpacing" in x) x.letterSpacing = "0px";
-  if (m.comp){ x.fillStyle = txt; x.globalAlpha = .85; x.font = "600 44px Commissioner, sans-serif"; x.fillText(up(m.comp), W / 2, L.comp); x.globalAlpha = 1; }
+  if (m.comp){ x.fillStyle = txt; x.globalAlpha = .85; x.font = "600 44px " + FF; x.fillText(up(m.comp), W / 2, L.comp); x.globalAlpha = 1; }
   const us = [c, la], them = [o, lb], left = m.home ? us : them, right = m.home ? them : us;
   [[left, W * .25], [right, W * .75]].forEach(([t, px]) => {
-    x.fillStyle = "rgba(255,255,255,.95)"; x.beginPath(); x.arc(px, L.cy, 185, 0, Math.PI * 2); x.fill();
-    const im = t[1], s = Math.min(290 / im.width, 290 / im.height);
+    x.fillStyle = DISC; x.beginPath(); x.arc(px, L.cy, 185 * LS, 0, Math.PI * 2); x.fill();
+    const im = t[1], s = Math.min(290 * LS / im.width, 290 * LS / im.height);
     x.drawImage(im, px - im.width * s / 2, L.cy - im.height * s / 2, im.width * s, im.height * s);
-    let sz = 56; x.font = `800 ${sz}px Commissioner, sans-serif`;
+    let sz = 56; x.font = `800 ${sz}px ${FF}`;
     let lines = wrap(x, up(t[0].name), 450);
-    while (lines.length > 2 && sz > 32){ sz -= 4; x.font = `800 ${sz}px Commissioner, sans-serif`; lines = wrap(x, up(t[0].name), 450); }
+    while (lines.length > 2 && sz > 32){ sz -= 4; x.font = `800 ${sz}px ${FF}`; lines = wrap(x, up(t[0].name), 450); }
     x.fillStyle = txt;
     lines.forEach((ln, i) => x.fillText(ln, px, L.cy + 270 + i * sz * 1.2));
   });
-  x.fillStyle = acc; x.font = "800 64px Commissioner, sans-serif"; x.fillText("VS", W / 2, L.cy + 22);
+  x.fillStyle = acc; x.font = "800 64px " + FF; x.fillText("VS", W / 2, L.cy + 22);
   const ds = up(new Date(m.date + "T00:00").toLocaleDateString(lang === "el" ? "el-GR" : "en-GB", {weekday: "long", day: "numeric", month: "long"}));
   x.fillStyle = txt; fitText(x, ds, 800, 64, 960); x.fillText(ds, W / 2, L.date);
-  if (m.time){ x.fillStyle = acc; x.font = "800 150px Commissioner, sans-serif"; x.fillText(m.time, W / 2, L.time); }
+  if (m.time){ x.fillStyle = acc; x.font = "800 150px " + FF; x.fillText(m.time, W / 2, L.time); }
   if (m.venue){ const v = up(m.venue); x.fillStyle = txt; x.globalAlpha = .9; fitText(x, v, 600, 44, 960); x.fillText(v, W / 2, L.ven); x.globalAlpha = 1; }
   return cv;
 }
@@ -434,22 +434,21 @@ function drawScorers({c, o, m, la, lb, fmt, lang, type}){
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const x = cv.getContext("2d");
   x.imageSmoothingQuality = "high";
-  const light = lum(c.c1) > .45, txt = light ? "#10141f" : "#ffffff";
+  const light = lightOf(c), txt = light ? "#10141f" : "#ffffff";
   const acc = Math.abs(lum(c.c2) - lum(c.c1)) > .25 ? c.c2 : txt;
-  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c.c1); g.addColorStop(1, mix(c.c1, light ? .8 : .45));
-  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  paintBg(x, W, H, c, light);
   x.textAlign = "center"; x.textBaseline = "alphabetic";
   const lab = type === "ht" ? (lang === "el" ? up("ημίχρονο") : "HALF TIME") : (lang === "el" ? up("τελικό αποτέλεσμα") : "FULL TIME");
   x.fillStyle = acc;
   if ("letterSpacing" in x) x.letterSpacing = "6px";
   fitText(x, lab, 800, 92, 940); x.fillText(lab, W / 2, L.lab);
   if ("letterSpacing" in x) x.letterSpacing = "0px";
-  if (m.comp){ x.fillStyle = txt; x.globalAlpha = .85; x.font = "600 44px Commissioner, sans-serif"; x.fillText(up(m.comp), W / 2, L.comp); x.globalAlpha = 1; }
+  if (m.comp){ x.fillStyle = txt; x.globalAlpha = .85; x.font = "600 44px " + FF; x.fillText(up(m.comp), W / 2, L.comp); x.globalAlpha = 1; }
   const gl = (m.goals || []).filter(z => type !== "ht" || (parseInt(z.min) || 99) <= 45), sc = (m.score && m.score[type]) || {us: 0, them: 0}, cnt = s => (s === "us" ? +sc.us : +sc.them) || 0;
   const us = {t: c, im: la, side: "us"}, them = {t: o, im: lb, side: "them"}, left = m.home ? us : them, right = m.home ? them : us;
   [[left, 190], [right, 890]].forEach(([k, px]) => {
-    x.fillStyle = "rgba(255,255,255,.95)"; x.beginPath(); x.arc(px, L.cy, 100, 0, Math.PI * 2); x.fill();
-    const s = Math.min(150 / k.im.width, 150 / k.im.height);
+    x.fillStyle = DISC; x.beginPath(); x.arc(px, L.cy, 100 * LS, 0, Math.PI * 2); x.fill();
+    const s = Math.min(150 * LS / k.im.width, 150 * LS / k.im.height);
     x.drawImage(k.im, px - k.im.width * s / 2, L.cy - k.im.height * s / 2, k.im.width * s, k.im.height * s);
   });
   const sTxt = `${cnt(left.side)} – ${cnt(right.side)}`;
@@ -491,26 +490,25 @@ function drawScore({c, o, m, la, lb, fmt, lang, type}){
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const x = cv.getContext("2d");
   x.imageSmoothingQuality = "high";
-  const light = lum(c.c1) > .45, txt = light ? "#10141f" : "#ffffff";
+  const light = lightOf(c), txt = light ? "#10141f" : "#ffffff";
   const acc = Math.abs(lum(c.c2) - lum(c.c1)) > .25 ? c.c2 : txt;
-  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c.c1); g.addColorStop(1, mix(c.c1, light ? .8 : .45));
-  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  paintBg(x, W, H, c, light);
   x.textAlign = "center"; x.textBaseline = "alphabetic";
   const lab = type === "ht" ? (lang === "el" ? up("ημίχρονο") : "HALF TIME") : (lang === "el" ? up("τελικό αποτέλεσμα") : "FULL TIME");
   x.fillStyle = acc;
   if ("letterSpacing" in x) x.letterSpacing = "6px";
   fitText(x, lab, 800, 92, 940); x.fillText(lab, W / 2, L.lab);
   if ("letterSpacing" in x) x.letterSpacing = "0px";
-  if (m.comp){ x.fillStyle = txt; x.globalAlpha = .85; x.font = "600 44px Commissioner, sans-serif"; x.fillText(up(m.comp), W / 2, L.comp); x.globalAlpha = 1; }
+  if (m.comp){ x.fillStyle = txt; x.globalAlpha = .85; x.font = "600 44px " + FF; x.fillText(up(m.comp), W / 2, L.comp); x.globalAlpha = 1; }
   const sc = (m.score && m.score[type]) || {us: 0, them: 0};
   const us = [c, la, +sc.us || 0], them = [o, lb, +sc.them || 0], left = m.home ? us : them, right = m.home ? them : us;
   [[left, W * .25], [right, W * .75]].forEach(([t, px]) => {
-    x.fillStyle = "rgba(255,255,255,.95)"; x.beginPath(); x.arc(px, L.cy, 150, 0, Math.PI * 2); x.fill();
-    const im = t[1], s = Math.min(230 / im.width, 230 / im.height);
+    x.fillStyle = DISC; x.beginPath(); x.arc(px, L.cy, 150 * LS, 0, Math.PI * 2); x.fill();
+    const im = t[1], s = Math.min(230 * LS / im.width, 230 * LS / im.height);
     x.drawImage(im, px - im.width * s / 2, L.cy - im.height * s / 2, im.width * s, im.height * s);
-    let sz = 52; x.font = `800 ${sz}px Commissioner, sans-serif`;
+    let sz = 52; x.font = `800 ${sz}px ${FF}`;
     let lines = wrap(x, up(t[0].name), 450);
-    while (lines.length > 2 && sz > 30){ sz -= 4; x.font = `800 ${sz}px Commissioner, sans-serif`; lines = wrap(x, up(t[0].name), 450); }
+    while (lines.length > 2 && sz > 30){ sz -= 4; x.font = `800 ${sz}px ${FF}`; lines = wrap(x, up(t[0].name), 450); }
     x.fillStyle = txt;
     lines.forEach((ln, i) => x.fillText(ln, px, L.cy + 225 + i * sz * 1.2));
   });
@@ -559,6 +557,200 @@ function bkUI(){
   };
 }
 
+const DEF = {bg: "gradient", font: "Commissioner", disc: "white", deco: "none", dim: 40, text: "auto", logo: 100};
+const BGS = {gradient: "Gradient", solid: "Solid", stripes: "Vertical stripes", hoops: "Hoops", diagonal: "Diagonal bands", image: "My image"};
+const FONTS = ["Commissioner", "Roboto Condensed", "Fira Sans Condensed", "Montserrat", "Roboto Slab"];
+const DISCS = {white: "White", glass: "Glass", dark: "Dark", none: "None"};
+const DECOS = {none: "None", frame: "Frame", slash: "Slash"};
+const DISC_FILL = {white: "rgba(255,255,255,.95)", glass: "rgba(255,255,255,.16)", dark: "rgba(0,0,0,.4)", none: "rgba(0,0,0,0)"};
+let TPL = DEF, FF = "Commissioner, sans-serif", DISC = DISC_FILL.white;
+let LS = 1, BGIMG = null;
+const tplOf = c => ({...DEF, ...(c.tpl || {})});
+const lightOf = c => TPL.text === "dark" ? true : TPL.text === "white" ? false : lum(c.c1) > .45;
+function useTpl(c){
+  TPL = tplOf(c); FF = `"${TPL.font}", sans-serif`; DISC = DISC_FILL[TPL.disc] || DISC_FILL.white;
+  LS = (TPL.logo || 100) / 100;
+  const img = TPL.bg === "image" && BGIMG;
+  return {...c, c1: img ? (TPL.text === "dark" ? "#ffffff" : "#0b0f1a") : (TPL.c1 || c.c1), c2: TPL.c2 || c.c2};
+}
+
+function paintBg(x, W, H, c, light){
+  const b = TPL.bg, c1 = c.c1, alt = mix(c1, light ? .86 : 1.22), dk = mix(c1, light ? .8 : .45);
+  if (b === "solid"){ x.fillStyle = c1; x.fillRect(0, 0, W, H); }
+  else if (b === "stripes"){ x.fillStyle = c1; x.fillRect(0, 0, W, H); x.fillStyle = alt; for (let i = 1; i * 90 < W; i += 2) x.fillRect(i * 90, 0, 90, H); }
+  else if (b === "hoops"){ x.fillStyle = c1; x.fillRect(0, 0, W, H); x.fillStyle = alt; for (let i = 1; i * 110 < H; i += 2) x.fillRect(0, i * 110, W, 110); }
+  else if (b === "image" && BGIMG){
+    const k = Math.max(W / BGIMG.width, H / BGIMG.height);
+    x.drawImage(BGIMG, (W - BGIMG.width * k) / 2, (H - BGIMG.height * k) / 2, BGIMG.width * k, BGIMG.height * k);
+    x.fillStyle = TPL.text === "dark" ? `rgba(255,255,255,${TPL.dim / 100})` : `rgba(0,0,0,${TPL.dim / 100})`; x.fillRect(0, 0, W, H);
+  }
+  else if (b === "diagonal"){
+    x.fillStyle = c1; x.fillRect(0, 0, W, H);
+    x.save(); x.translate(W / 2, H / 2); x.rotate(-.5); x.fillStyle = alt;
+    for (let i = -14; i < 14; i += 2) x.fillRect(i * 80, -H, 80, H * 2);
+    x.restore();
+  } else { const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c1); g.addColorStop(1, dk); x.fillStyle = g; x.fillRect(0, 0, W, H); }
+  if (b !== "gradient" && b !== "solid" && !(b === "image" && BGIMG)){
+    const v = x.createLinearGradient(0, 0, 0, H); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, light ? "rgba(0,0,0,.12)" : "rgba(0,0,0,.35)");
+    x.fillStyle = v; x.fillRect(0, 0, W, H);
+  }
+  const ac = Math.abs(lum(c.c2) - lum(c1)) > .25 ? c.c2 : (light ? "#10141f" : "#ffffff");
+  if (TPL.deco === "frame"){ x.strokeStyle = ac; x.globalAlpha = .9; x.lineWidth = 8; x.strokeRect(34, 34, W - 68, H - 68); x.globalAlpha = 1; }
+  else if (TPL.deco === "slash"){ x.fillStyle = ac; x.globalAlpha = .12; x.beginPath(); x.moveTo(W * .55, 0); x.lineTo(W, 0); x.lineTo(W, H); x.lineTo(W * .15, H); x.closePath(); x.fill(); x.globalAlpha = 1; }
+}
+
+const COL_EN = [["red", "#d32f2f"], ["maroon", "#7b1e2b"], ["burgundy", "#7b1e2b"], ["blue", "#1f4fd8"], ["navy", "#0d1b4c"], ["sky", "#4aa3e0"], ["green", "#1e8f4e"], ["yellow", "#f5c518"], ["gold", "#d4a017"], ["orange", "#f57c00"], ["black", "#111111"], ["white", "#ffffff"], ["grey", "#7a8594"], ["gray", "#7a8594"], ["silver", "#c0c7d0"], ["purple", "#6a1b9a"], ["pink", "#e91e8c"], ["brown", "#6d4c41"], ["teal", "#0f8b8d"]];
+const COL_GR = [["κοκκιν", "#d32f2f"], ["μπορντο", "#7b1e2b"], ["γαλαζ", "#4aa3e0"], ["μπλε", "#1f4fd8"], ["πρασιν", "#1e8f4e"], ["κιτριν", "#f5c518"], ["χρυσ", "#d4a017"], ["πορτοκαλ", "#f57c00"], ["μαυρ", "#111111"], ["ασπρ", "#ffffff"], ["λευκ", "#ffffff"], ["γκρι", "#7a8594"], ["ασημ", "#c0c7d0"], ["μωβ", "#6a1b9a"], ["ροζ", "#e91e8c"], ["καφε", "#6d4c41"], ["τιρκουαζ", "#0f8b8d"]];
+
+function tone(h, d){
+  const n = parseInt(h.slice(1), 16), f = v => Math.max(0, Math.min(255, Math.round(d < 0 ? v * (1 + d) : v + (255 - v) * d)));
+  return "#" + [n >> 16, (n >> 8) & 255, n & 255].map(v => f(v).toString(16).padStart(2, "0")).join("");
+}
+
+function parseLook(raw){
+  let t = raw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const out = {};
+  const rm = re => { const hit = re.test(t); if (hit) t = t.replace(re, " "); return hit; };
+  if (rm(/\b(no|without)\s+(logo\s+)?(backing|disc|circle)\b|\btransparent logo\b|χωρισ\s+δισκο/)) out.disc = "none";
+  else if (rm(/\b(glass|glassy|translucent)\b/)) out.disc = "glass";
+  else if (rm(/\b(dark|black)\s+(logo\s+)?(backing|disc|circle)\b/)) out.disc = "dark";
+  else if (rm(/\bwhite\s+(logo\s+)?(backing|disc|circle)\b/)) out.disc = "white";
+  if (/club colou?rs|χρωματα (της )?ομαδας/.test(t)){ out.c1 = undefined; out.c2 = undefined; }
+  if (/\b(frame|border)\b|πλαισι/.test(t)) out.deco = "frame";
+  else if (/\bslash\b|λωριδ/.test(t)) out.deco = "slash";
+  if (/diagonal|διαγωνι/.test(t)) out.bg = "diagonal";
+  else if (/hoop|horizontal|οριζοντι/.test(t)) out.bg = "hoops";
+  else if (/stripe|vertical|ριγε|ραβδ/.test(t)) out.bg = "stripes";
+  else if (/\b(solid|plain|flat)\b|μονοχρωμ/.test(t)) out.bg = "solid";
+  else if (/gradient|ντεγκραντε/.test(t)) out.bg = "gradient";
+  const fl = FONTS.find(f => t.includes(f.toLowerCase()));
+  if (fl) out.font = fl;
+  else if (/condensed|narrow|sporty|στενη/.test(t)) out.font = "Roboto Condensed";
+  else if (/\b(wide|geometric|modern)\b|πλατι/.test(t)) out.font = "Montserrat";
+  else if (/slab|serif|retro|classic|κλασικ/.test(t)) out.font = "Roboto Slab";
+  else if (/\b(clean|simple|default)\b/.test(t)) out.font = "Commissioner";
+  const cols = []; let mod = 0;
+  t.split(/[^a-z\u03b1-\u03c9]+/).filter(Boolean).forEach(w => {
+    if (w === "on" || w === "σε"){ cols.push("ON"); return; }
+    if (/^(dark|deep)$/.test(w) || w.startsWith("σκουρ")){ mod = -.4; return; }
+    if (/^(light|pale)$/.test(w) || w.startsWith("ανοιχτ")){ mod = .4; return; }
+    const hit = COL_EN.find(([s]) => w.startsWith(s)) || COL_GR.find(([s]) => w.startsWith(s));
+    if (hit){ cols.push(mod ? tone(hit[1], mod) : hit[1]); mod = 0; }
+  });
+  const oi = cols.indexOf("ON");
+  const bgC = oi >= 0 ? cols.slice(oi + 1).find(z => z !== "ON") : cols.find(z => z !== "ON");
+  const acC = oi >= 0 ? cols.slice(0, oi).find(z => z !== "ON") : cols.filter(z => z !== "ON")[1];
+  if (bgC) out.c1 = bgC;
+  if (acC) out.c2 = acC;
+  return out;
+}
+
+async function tplImg(c, fmt){
+  const t = tplOf(c), src = fmt === "story" ? (t.imgStory || t.imgPost) : (t.imgPost || t.imgStory);
+  if (t.bg !== "image" || !src) return null;
+  try { return await loadImg(src); } catch(e){ return null; }
+}
+function toCover(file, W, H){
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const i = new Image();
+      i.onload = () => {
+        const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+        const k = Math.max(W / i.width, H / i.height);
+        cv.getContext("2d").drawImage(i, (W - i.width * k) / 2, (H - i.height * k) / 2, i.width * k, i.height * k);
+        res(cv.toDataURL("image/jpeg", .78));
+      };
+      i.onerror = rej; i.src = r.result;
+    };
+    r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+
+async function drawDesign(c){
+  const fam = tplOf(c).font, sample = "ΑΒΓαβγ ABCabc 0123";
+  await document.fonts.load(`800 64px "${fam}"`, sample);
+  await document.fonts.load(`600 44px "${fam}"`, sample);
+  const [im, bgi] = await Promise.all([loadImg(c.logo), tplImg(c, "post")]);
+  if (tab !== "design" || !$("#dimg")) return;
+  BGIMG = bgi; const ce = useTpl(c), d = new Date(Date.now() + 3 * 864e5).toLocaleDateString("sv-SE");
+  const cv = drawMatchday({c: ce, o: {name: "ΑΝΤΙΠΑΛΟΣ"}, m: {home: true, date: d, time: "18:00", venue: "ΓΗΠΕΔΟ", comp: "ΠΡΩΤΑΘΛΗΜΑ"}, la: im, lb: im, fmt: "post", lang: "el", type: "matchday"});
+  $("#dimg").src = cv.toDataURL("image/png");
+}
+
+function renderDesign(){
+  const c = cur();
+  $("#head").innerHTML = headHtml(c);
+  $("#add").hidden = true; $("#formWrap").innerHTML = "";
+  const opt = (o, v) => Object.entries(o).map(([k, n]) => `<option value="${k}" ${v === k ? "selected" : ""}>${n}</option>`).join("");
+  const t0 = tplOf(c);
+  $("#list").innerHTML = `<div class="form">
+  <img id="dimg" class="gimg" alt="Design preview">
+  <label>Describe the look<input type="text" id="dcmd" placeholder="e.g. dark green with gold hoops, condensed font" autocomplete="off"></label>
+  <button class="primary" id="dgen">Generate</button>
+  <div class="row"><label>Background<select id="dbg">${opt(BGS, t0.bg)}</select></label><label>Font<select id="dfont">${FONTS.map(f => `<option>${f}</option>`).join("")}</select></label></div>
+  <div class="row"><label>Logo backing<select id="ddisc">${opt(DISCS, t0.disc)}</select></label><label>Decoration<select id="ddeco">${opt(DECOS, t0.deco)}</select></label></div>
+  <div class="row"><label>Color 1<input type="color" id="dc1"></label><label>Color 2<input type="color" id="dc2"></label></div>
+  <div class="form"><b>My brand</b><p class="hint">Upload your own artwork or photo as the background and fine-tune it. Saved for this club only.</p>
+  <div class="row"><label>Post image<input type="file" id="dimgp" accept="image/*"></label><label>Story image<input type="file" id="dimgs" accept="image/*"></label></div>
+  <div class="row"><label>Image darkness<input type="range" id="ddim" min="0" max="80"></label><label>Logo size<input type="range" id="dlogo" min="80" max="115"></label></div>
+  <label>Text color<select id="dtext"><option value="auto">Auto</option><option value="white">White</option><option value="dark">Dark</option></select></label>
+  <button id="dimgx">Remove images</button></div>
+  <div class="actions"><button class="primary" id="dsurp">Surprise me</button><button id="dreset">Reset</button></div>
+  <label>Template code<textarea id="djson" rows="5" spellcheck="false"></textarea></label>
+  <div class="actions"><button id="dapply">Apply code</button><button id="dcopy">Copy code</button></div>
+  <p class="err" id="dmsg" role="status"></p></div>`;
+  const msg = (t, bad) => { const p = $("#dmsg"); p.textContent = t; p.style.color = bad ? "" : "var(--mute)"; };
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const show = () => {
+    const t = tplOf(c);
+    $("#dbg").value = t.bg; $("#dfont").value = t.font; $("#ddisc").value = t.disc; $("#ddeco").value = t.deco;
+    $("#dc1").value = t.c1 || c.c1; $("#dc2").value = t.c2 || c.c2;
+    $("#ddim").value = t.dim; $("#dlogo").value = t.logo; $("#dtext").value = t.text;
+    $("#djson").value = JSON.stringify(t, (k, v) => k.startsWith("img") ? undefined : v);
+    drawDesign(c);
+  };
+  const apply = p => { c.tpl = {...(c.tpl || {}), ...p}; Object.keys(c.tpl).forEach(k => { if (c.tpl[k] === undefined) delete c.tpl[k]; }); if (!save()) msg("Not enough space on this device. Try a smaller image.", 1); show(); };
+  [["#dbg", "bg"], ["#dfont", "font"], ["#ddisc", "disc"], ["#ddeco", "deco"], ["#dc1", "c1"], ["#dc2", "c2"]].forEach(([id, k]) => { $(id).onchange = e => apply({[k]: e.target.value}); });
+  $("#dsurp").onclick = () => apply({bg: pick(Object.keys(BGS).filter(k => k !== "image")), font: pick(FONTS), disc: pick(Object.keys(DISCS)), deco: pick(Object.keys(DECOS)), ...(Math.random() < .3 ? {c1: c.c2, c2: c.c1} : {c1: undefined, c2: undefined})});
+  $("#dreset").onclick = () => { delete c.tpl; save(); show(); };
+  $("#dapply").onclick = () => {
+    try {
+      const j = JSON.parse($("#djson").value || "{}"), n = {};
+      if (Object.keys(BGS).includes(j.bg)) n.bg = j.bg;
+      if (FONTS.includes(j.font)) n.font = j.font;
+      if (Object.keys(DISCS).includes(j.disc)) n.disc = j.disc;
+      if (Object.keys(DECOS).includes(j.deco)) n.deco = j.deco;
+      if (/^#[0-9a-f]{6}$/i.test(j.c1)) n.c1 = j.c1;
+      if (/^#[0-9a-f]{6}$/i.test(j.c2)) n.c2 = j.c2;
+      if (Number.isFinite(j.dim) && j.dim >= 0 && j.dim <= 80) n.dim = j.dim;
+      if (["auto", "white", "dark"].includes(j.text)) n.text = j.text;
+      if (Number.isFinite(j.logo) && j.logo >= 80 && j.logo <= 115) n.logo = j.logo;
+      if (!Object.keys(n).length) throw 0;
+      const old = c.tpl || {}; if (old.imgPost) n.imgPost = old.imgPost; if (old.imgStory) n.imgStory = old.imgStory; c.tpl = n; save(); show(); msg("Template applied.");
+    } catch(e){ msg("That template code isn’t valid.", 1); }
+  };
+  const go = () => {
+    const out = parseLook($("#dcmd").value);
+    if (!Object.keys(out).length) return msg("I didn’t recognize any design words. Try colors (green, gold), a background (stripes, hoops, diagonal, solid), a font (condensed, wide, slab), a logo backing (no backing, glass, dark) or a decoration (frame, slash).", 1);
+    const nm = {bg: "background", font: "font", disc: "logo backing", deco: "decoration", c1: "color 1", c2: "color 2"};
+    apply(out); msg("Applied: " + Object.keys(out).map(k => nm[k]).join(", ") + ".");
+  };
+  const pickImg = (id, key, w, h) => { $(id).onchange = async e => { const f = e.target.files[0]; e.target.value = ""; if (!f) return; try { apply({[key]: await toCover(f, w, h), bg: "image"}); } catch(x){ msg("That image couldn’t be read.", 1); } }; };
+  pickImg("#dimgp", "imgPost", 1080, 1350); pickImg("#dimgs", "imgStory", 1080, 1920);
+  $("#ddim").onchange = e => apply({dim: +e.target.value});
+  $("#dlogo").onchange = e => apply({logo: +e.target.value});
+  $("#dtext").onchange = e => apply({text: e.target.value});
+  $("#dimgx").onclick = () => apply({imgPost: undefined, imgStory: undefined, ...(tplOf(c).bg === "image" ? {bg: "gradient"} : {})});
+  $("#dgen").onclick = go;
+  $("#dcmd").onkeydown = e => { if (e.key === "Enter") go(); };
+  $("#dcopy").onclick = async () => {
+    try { await navigator.clipboard.writeText($("#djson").value); msg("Copied."); }
+    catch(e){ $("#djson").select(); msg("Select the code and copy it."); }
+  };
+  show();
+}
+
 const FORMS = ["4-4-2", "4-3-3", "4-2-3-1", "3-5-2", "3-4-3", "4-5-1", "5-3-2", "4-1-4-1"];
 
 function drawPitch({x, c, m, ids, lang, acc, txt, L, story, W, ph, cv}){
@@ -586,7 +778,7 @@ function drawPitch({x, c, m, ids, lang, acc, txt, L, story, W, ph, cv}){
         x.strokeStyle = acc; x.lineWidth = 6; x.beginPath(); x.arc(px, y, 44, 0, Math.PI * 2); x.stroke();
       } else {
         x.fillStyle = acc; x.beginPath(); x.arc(px, y, 44, 0, Math.PI * 2); x.fill();
-        x.fillStyle = lum(acc) > .45 ? "#10141f" : "#ffffff"; x.font = "800 40px Commissioner, sans-serif"; x.fillText(p.num || "–", px, y + 14);
+        x.fillStyle = lum(acc) > .45 ? "#10141f" : "#ffffff"; x.font = "800 40px " + FF; x.fillText(p.num || "–", px, y + 14);
       }
       const nm = (im && p.num ? p.num + " " : "") + up(p.name.trim().split(/\s+/).pop());
       x.fillStyle = txt; fitText(x, nm, 800, 30, PW / row.length - 12); x.fillText(nm, px, y + 78);
@@ -621,13 +813,12 @@ function drawLineup({c, o, m, la, fmt, lang, ph}){
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const x = cv.getContext("2d");
   x.imageSmoothingQuality = "high";
-  const light = lum(c.c1) > .45, txt = light ? "#10141f" : "#ffffff";
+  const light = lightOf(c), txt = light ? "#10141f" : "#ffffff";
   const acc = Math.abs(lum(c.c2) - lum(c.c1)) > .25 ? c.c2 : txt;
-  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c.c1); g.addColorStop(1, mix(c.c1, light ? .8 : .45));
-  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  paintBg(x, W, H, c, light);
   x.textAlign = "center"; x.textBaseline = "alphabetic";
-  x.fillStyle = "rgba(255,255,255,.95)"; x.beginPath(); x.arc(W / 2, L.logo, 80, 0, Math.PI * 2); x.fill();
-  const s = Math.min(130 / la.width, 130 / la.height);
+  x.fillStyle = DISC; x.beginPath(); x.arc(W / 2, L.logo, 80 * LS, 0, Math.PI * 2); x.fill();
+  const s = Math.min(130 * LS / la.width, 130 * LS / la.height);
   x.drawImage(la, W / 2 - la.width * s / 2, L.logo - la.height * s / 2, la.width * s, la.height * s);
   x.fillStyle = acc;
   if ("letterSpacing" in x) x.letterSpacing = "6px";
@@ -639,12 +830,12 @@ function drawLineup({c, o, m, la, fmt, lang, ph}){
   const ids = (m.lineup && m.lineup.ids) || [];
   if (m.lineup && m.lineup.style === "pitch") return drawPitch({x, c, m, ids, lang, acc, txt, L, story, W, ph: ph || {}, cv});
   const ps = (c.players || []).filter(p => ids.includes(p.id)).sort((a, b) => (+a.num || 999) - (+b.num || 999));
-  if (!ps.length){ x.fillStyle = txt; x.globalAlpha = .7; x.font = "600 48px Commissioner, sans-serif"; x.fillText("Choose the players", W / 2, L.y + 100); x.globalAlpha = 1; }
+  if (!ps.length){ x.fillStyle = txt; x.globalAlpha = .7; x.font = "600 48px " + FF; x.fillText("Choose the players", W / 2, L.y + 100); x.globalAlpha = 1; }
   const rowH = L.row * Math.min(1, 11 / Math.max(ps.length, 1)), r = rowH * .36, sz = Math.round(rowH * .6);
   ps.forEach((p, i) => {
     const cy = L.y + i * rowH + rowH / 2;
     x.fillStyle = acc; x.beginPath(); x.arc(230, cy, r, 0, Math.PI * 2); x.fill();
-    x.fillStyle = lum(acc) > .45 ? "#10141f" : "#ffffff"; x.textAlign = "center"; x.font = `800 ${Math.round(r * 1.1)}px Commissioner, sans-serif`;
+    x.fillStyle = lum(acc) > .45 ? "#10141f" : "#ffffff"; x.textAlign = "center"; x.font = `800 ${Math.round(r * 1.1)}px ${FF}`;
     x.fillText(p.num || "–", 230, cy + r * .38);
     const n = up(p.name); x.fillStyle = txt; x.textAlign = "left"; fitText(x, n, 800, sz, 720); x.fillText(n, 310, cy + sz * .35);
   });
@@ -657,11 +848,11 @@ function drawLineup({c, o, m, la, fmt, lang, ph}){
 async function draw(){
   const c = cur(), m = c.matches.find(z => z.id === gview.mid), o = opps.find(z => z.id === m.opp);
   const sample = "ΑΒΓΔαβγδ ABCabc 0123";
-  await document.fonts.load("800 64px Commissioner", sample);
-  await document.fonts.load("600 44px Commissioner", sample);
-  const [la, lb] = await Promise.all([loadImg(c.logo), loadImg(o.logo)]);
+  const fam = tplOf(c).font; await document.fonts.load(`800 64px "${fam}"`, sample);
+  await document.fonts.load(`600 44px "${fam}"`, sample);
+  const [la, lb, bgi] = await Promise.all([loadImg(c.logo), loadImg(o.logo), tplImg(c, gview.fmt)]);
   if (!gview || !$("#gimg")) return;
-  const args = {c, o, m, la, lb, fmt: gview.fmt, lang: gview.lang, type: gview.type};
+  BGIMG = bgi; const args = {c: useTpl(c), o, m, la, lb, fmt: gview.fmt, lang: gview.lang, type: gview.type};
   if (gview.type === "lineup"){
     const ln = m.lineup || {}; args.ph = {};
     if (ln.style === "pitch") await Promise.all((c.players || []).filter(p => p.photo && (ln.ids || []).includes(p.id)).map(async p => { try { args.ph[p.id] = await loadImg(p.photo); } catch(e){} }));
