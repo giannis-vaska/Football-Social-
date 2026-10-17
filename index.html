@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Club Graphics</title>
+<link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f4;--card:#fff;--ink:#14213d;--mute:#5d6b82;--line:#cbd2db;--accent:#1f4fd8;--on-accent:#fff;--danger:#b3261e;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1624;--card:#18223a;--ink:#eaf0fb;--mute:#9aa8c2;--line:#2c3a58;--accent:#6c93ff;--on-accent:#0f1624;--danger:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1624;--card:#18223a;--ink:#eaf0fb;--mute:#9aa8c2;--line:#2c3a58;--accent:#6c93ff;--on-accent:#0f1624;--danger:#ff8a80;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Commissioner,system-ui,sans-serif;line-height:1.45}
+main{max-width:560px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:28px;font-weight:800;margin:8px 0 4px;letter-spacing:-.01em}
+.sub{color:var(--mute);margin:0 0 20px}
+.club{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.club img{width:56px;height:56px;object-fit:contain}
+.info{flex:1;min-width:0}
+.info b{display:block;font-size:18px;font-weight:600;overflow-wrap:anywhere}
+.sw{display:inline-block;width:18px;height:18px;border-radius:50%;border:1px solid var(--line);margin-right:6px;vertical-align:middle}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;min-height:44px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+button.danger{color:var(--danger)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.form{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:14px}
+label{display:grid;gap:6px;font-weight:600}
+input[type=text],input[type=date],input[type=time]{font:inherit;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+input[type=file]{font:inherit;font-weight:400;max-width:100%}
+input[type=color]{width:100%;height:44px;padding:2px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
+.row{display:flex;gap:12px}.row label{flex:1}
+.logo-pick{display:flex;gap:12px;align-items:center}
+.logo-pick img{width:64px;height:64px;object-fit:contain;border:1px dashed var(--line);border-radius:12px;background:var(--bg)}
+.logo-pick label{flex:1;min-width:0}
+.err{color:var(--danger);min-height:1.2em;margin:0}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.empty{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:24px;text-align:center;color:var(--mute);margin-bottom:12px}
+.num{min-width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--on-accent);font-weight:800;font-size:18px}
+.club .ph{width:48px;height:48px;border-radius:50%;object-fit:cover}
+.meta{color:var(--mute);font-size:14px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.top img{width:44px;height:44px;object-fit:contain}
+.top h1{margin:0;flex:1;min-width:0;font-size:22px;overflow-wrap:anywhere}
+select{font:inherit;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tabs button{flex:1}
+.tabs .on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.past{opacity:.65}
+#bk{margin-top:28px}
+.gl{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line)}
+.gl span{min-width:0;overflow-wrap:anywhere}
+.gimg{width:100%;height:auto;border-radius:8px;background:var(--bg)}
+.hint{color:var(--mute);font-size:14px;margin:0}
+summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600}
+.pick{display:flex;align-items:center;gap:10px;font-weight:400;padding:6px 0}
+.pick input{width:22px;height:22px;flex:none}
+.pick span{min-width:30px;font-weight:800}
+.form .form{background:var(--bg)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <div id="head"></div>
+  
+  <div id="list"></div>
+  <div id="formWrap"></div>
+  <button class="primary" id="add">Add club</button>
+  <div id="bk"></div>
+</main>
+<script>
+const KEY = "club-graphics:clubs";
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let clubs = load(), draft = null, openId = null, pdraft = null;
+
+function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ return []; } }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(clubs)); return true; } catch(e){ return false; } }
+
+function toLogo(file, photo){
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const i = new Image();
+      i.onload = () => {
+        const s = Math.min(1, 256 / Math.max(i.width, i.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(i.width * s); c.height = Math.round(i.height * s);
+        c.getContext("2d").drawImage(i, 0, 0, c.width, c.height);
+        res(photo ? c.toDataURL("image/jpeg", .8) : c.toDataURL("image/png"));
+      };
+      i.onerror = rej; i.src = r.result;
+    };
+    r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+
+function formHtml(){
+  return `<div class="form">
+  <label>Club name (Greek)<input type="text" id="name" value="${esc(draft.name)}" placeholder="π.χ. Α.Ο. Αχαΐας" autocomplete="off"></label>
+  <div class="logo-pick">
+    <img id="prev" alt="" ${draft.logo ? `src="${draft.logo}"` : "hidden"}>
+    <label>Logo (required)<input type="file" id="file" accept="image/*"></label>
+  </div>
+  <div class="row">
+    <label>Main color<input type="color" id="c1" value="${draft.c1}"></label>
+    <label>Second color<input type="color" id="c2" value="${draft.c2}"></label>
+  </div>
+  <p class="err" id="err" role="alert"></p>
+  <div class="actions">
+    <button class="primary" id="save">Save club</button>
+    <button id="cancel">Cancel</button>
+    ${draft.id ? `<button class="danger" id="del">Delete club</button>` : ""}
+  </div></div>`;
+}
+
+function render(){
+  $("#bk").hidden = !!openId;
+  if (openId && gview) return renderGraphic();
+  if (openId) return tab === "matches" ? renderMatches() : renderPlayers();
+  $("#head").innerHTML = `<h1>Clubs</h1><p class="sub">Add each club once. Its logo and colors are reused in every graphic.</p>`;
+  $("#add").textContent = "Add club"; $("#bk").hidden = !!draft;
+  $("#add").hidden = !!draft;
+  if (draft){ $("#list").innerHTML = ""; $("#formWrap").innerHTML = formHtml(); bind(); return; }
+  $("#formWrap").innerHTML = "";
+  $("#list").innerHTML = clubs.length
+    ? clubs.map(c => `<div class="club"><img src="${c.logo}" alt=""><div class="info"><b>${esc(c.name)}</b><span class="sw" style="background:${c.c1}"></span><span class="sw" style="background:${c.c2}"></span></div><button data-open="${c.id}">Players</button><button data-edit="${c.id}">Edit</button></div>`).join("")
+    : `<div class="empty">No clubs yet. Add your first club to get started.</div>`;
+}
+
+function bind(){
+  const err = m => { $("#err").textContent = m; };
+  $("#name").oninput = e => draft.name = e.target.value;
+  $("#c1").oninput = e => draft.c1 = e.target.value;
+  $("#c2").oninput = e => draft.c2 = e.target.value;
+  $("#file").onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { draft.logo = await toLogo(f); const p = $("#prev"); p.src = draft.logo; p.hidden = false; err(""); }
+    catch(x){ err("That image couldn’t be read. Try a PNG or JPG."); }
+  };
+  $("#cancel").onclick = () => { draft = null; render(); };
+  $("#save").onclick = () => {
+    const n = draft.name.trim();
+    if (!n) return err("Add the club’s name in Greek.");
+    if (!draft.logo) return err("Add a logo. Every graphic needs one.");
+    draft.name = n;
+    if (!draft.id){ draft.id = Date.now().toString(36); clubs.push(draft); }
+    else clubs = clubs.map(c => c.id === draft.id ? draft : c);
+    if (!save()) return err("Couldn’t save on this device. Try a smaller logo.");
+    draft = null; render();
+  };
+  const d = $("#del");
+  if (d) d.onclick = () => {
+    if (d.dataset.sure){ clubs = clubs.filter(c => c.id !== draft.id); save(); draft = null; render(); }
+    else { d.dataset.sure = 1; d.textContent = "Tap again to delete"; }
+  };
+}
+
+$("#list").onclick = e => {
+  const t = e.target.dataset;
+  if (t.edit){ draft = {...clubs.find(c => c.id === t.edit)}; render(); }
+  else if (t.open){ openId = t.open; tab = "players"; render(); }
+  else if (t.pedit){ pdraft = {...cur().players.find(p => p.id === t.pedit)}; render(); }
+  else if (t.tab){ tab = t.tab; pdraft = null; mdraft = null; render(); }
+  else if (t.gfx){ gview = {mid: t.gfx, type: "matchday", fmt: "post", lang: "el"}; render(); }
+  else if (t.gback){ gview = null; render(); }
+  else if (t.medit){ gview = null; mdraft = {...cur().matches.find(x => x.id === t.medit), nn: "", nl: ""}; render(); }
+  else if (t.back){ openId = null; pdraft = null; mdraft = null; gview = null; render(); }
+};
+$("#add").onclick = () => {
+  if (openId && tab === "matches") mdraft = {id:null, opp: opps.length ? "" : "__new", home:true, date:"", time:"", venue:"", comp:"", nn:"", nl:""};
+  else if (openId) pdraft = {id:null, name:"", num:"", pos:"", photo:""};
+  else draft = {id:null, name:"", logo:"", c1:"#1f4fd8", c2:"#ffffff"};
+  render();
+};
+const cur = () => clubs.find(c => c.id === openId);
+const POS = {GK:"Goalkeeper", DEF:"Defender", MID:"Midfielder", FWD:"Forward"};
+
+function renderPlayers(){
+  const c = cur();
+  $("#head").innerHTML = `${headHtml(c)}`;
+  $("#add").textContent = "Add player";
+  $("#add").hidden = !!pdraft;
+  if (pdraft){ $("#list").innerHTML = ""; $("#formWrap").innerHTML = playerForm(); bindP(); return; }
+  $("#formWrap").innerHTML = "";
+  const ps = [...(c.players || [])].sort((a, b) => (+a.num || 999) - (+b.num || 999));
+  $("#list").innerHTML = ps.length
+    ? ps.map(p => `<div class="club">${p.photo ? `<img class="ph" src="${p.photo}" alt="">` : `<div class="num">${esc(String(p.num || "–"))}</div>`}<div class="info"><b>${esc(p.name)}</b><span class="meta">${[p.num ? "#" + p.num : "", POS[p.pos] || ""].filter(Boolean).join(", ")}</span></div><button data-pedit="${p.id}">Edit</button></div>`).join("")
+    : `<div class="empty">No players yet. Add the squad, then you can pick the lineup for each match.</div>`;
+}
+
+function playerForm(){
+  return `<div class="form">
+  <label>Player name (Greek)<input type="text" id="pname" value="${esc(pdraft.name)}" placeholder="π.χ. Γιώργος Παπαδόπουλος" autocomplete="off"></label>
+  <div class="row">
+    <label>Shirt number<input type="text" id="pnum" inputmode="numeric" maxlength="2" value="${esc(String(pdraft.num))}"></label>
+    <label>Position<select id="ppos">${["", "GK", "DEF", "MID", "FWD"].map(k => `<option value="${k}" ${pdraft.pos === k ? "selected" : ""}>${POS[k] || "Not set"}</option>`).join("")}</select></label>
+  </div>
+  <div class="logo-pick">
+    <img id="pprev" alt="" ${pdraft.photo ? `src="${pdraft.photo}"` : "hidden"}>
+    <label>Photo (optional)<input type="file" id="pfile" accept="image/*"></label>
+  </div>
+  <p class="err" id="err" role="alert"></p>
+  <div class="actions">
+    <button class="primary" id="psave">Save player</button>
+    <button id="pcancel">Cancel</button>
+    ${pdraft.id ? `<button class="danger" id="pdel">Delete player</button>` : ""}
+  </div></div>`;
+}
+
+function bindP(){
+  const err = m => { $("#err").textContent = m; };
+  $("#pname").oninput = e => pdraft.name = e.target.value;
+  $("#pnum").oninput = e => { pdraft.num = e.target.value.replace(/\D/g, ""); e.target.value = pdraft.num; };
+  $("#ppos").onchange = e => pdraft.pos = e.target.value;
+  $("#pfile").onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { pdraft.photo = await toLogo(f, true); const p = $("#pprev"); p.src = pdraft.photo; p.hidden = false; err(""); }
+    catch(x){ err("That image couldn’t be read. Try a PNG or JPG."); }
+  };
+  $("#pcancel").onclick = () => { pdraft = null; render(); };
+  $("#psave").onclick = () => {
+    const n = pdraft.name.trim();
+    if (!n) return err("Add the player’s name in Greek.");
+    const c = cur(); c.players = c.players || [];
+    if (pdraft.num && c.players.some(p => p.num === pdraft.num && p.id !== pdraft.id)) return err("Another player already has this number.");
+    pdraft.name = n;
+    if (!pdraft.id){ pdraft.id = Date.now().toString(36); c.players.push(pdraft); }
+    else c.players = c.players.map(p => p.id === pdraft.id ? pdraft : p);
+    if (!save()) return err("Couldn’t save on this device. Try a smaller photo.");
+    pdraft = null; render();
+  };
+  const d = $("#pdel");
+  if (d) d.onclick = () => {
+    if (d.dataset.sure){ const c = cur(); c.players = c.players.filter(p => p.id !== pdraft.id); save(); pdraft = null; render(); }
+    else { d.dataset.sure = 1; d.textContent = "Tap again to delete"; }
+  };
+}
+
+const OKEY = "club-graphics:opps";
+let opps = (() => { try { return JSON.parse(localStorage.getItem(OKEY)) || []; } catch(e){ return []; } })();
+const saveO = () => { try { localStorage.setItem(OKEY, JSON.stringify(opps)); return true; } catch(e){ return false; } };
+let tab = "players", mdraft = null;
+
+const headHtml = c => `<div class="top"><button data-back="1">Back</button><img src="${c.logo}" alt=""><h1>${esc(c.name)}</h1></div>
+<div class="tabs"><button data-tab="players" ${tab === "players" ? 'class="on"' : ""}>Players</button><button data-tab="matches" ${tab === "matches" ? 'class="on"' : ""}>Matches</button></div>`;
+
+function renderMatches(){
+  const c = cur();
+  $("#head").innerHTML = headHtml(c);
+  $("#add").textContent = "Add match";
+  $("#add").hidden = !!mdraft;
+  if (mdraft){ $("#list").innerHTML = ""; $("#formWrap").innerHTML = matchForm(); bindM(); return; }
+  $("#formWrap").innerHTML = "";
+  const key = m => m.date + (m.time || "");
+  const today = new Date().toLocaleDateString("sv-SE");
+  const all = c.matches || [];
+  const up = all.filter(m => m.date >= today).sort((a, b) => key(a) < key(b) ? -1 : 1);
+  const past = all.filter(m => m.date < today).sort((a, b) => key(a) < key(b) ? 1 : -1);
+  const row = (m, old) => {
+    const o = opps.find(x => x.id === m.opp) || {name: "?", logo: ""};
+    const names = m.home ? [c.name, o.name] : [o.name, c.name];
+    const d = new Date(m.date + "T00:00").toLocaleDateString("en-GB", {weekday: "short", day: "numeric", month: "short"});
+    return `<div class="club${old ? " past" : ""}"><img src="${o.logo}" alt=""><div class="info"><b>${esc(names[0])} – ${esc(names[1])}</b><span class="meta">${[d, m.time, m.venue].filter(Boolean).map(esc).join(", ")}</span></div><button data-gfx="${m.id}">Graphics</button></div>`;
+  };
+  $("#list").innerHTML = all.length
+    ? up.map(m => row(m)).join("") + past.map(m => row(m, 1)).join("")
+    : `<div class="empty">No matches yet. Add the next fixture to start making graphics.</div>`;
+}
+
+function matchForm(){
+  const m = mdraft;
+  return `<div class="form">
+  <label>Opponent<select id="mopp">${opps.length ? `<option value="">Choose opponent</option>` : ""}${opps.map(o => `<option value="${o.id}" ${m.opp === o.id ? "selected" : ""}>${esc(o.name)}</option>`).join("")}<option value="__new" ${m.opp === "__new" ? "selected" : ""}>New opponent…</option></select></label>
+  <div id="newopp" class="form" ${m.opp === "__new" ? "" : "hidden"}>
+    <label>Opponent name (Greek)<input type="text" id="onm" value="${esc(m.nn || "")}" autocomplete="off"></label>
+    <div class="logo-pick"><img id="oprev" alt="" ${m.nl ? `src="${m.nl}"` : "hidden"}><label>Opponent logo (required)<input type="file" id="ofile" accept="image/*"></label></div>
+  </div>
+  <label>Playing<select id="mhome"><option value="1" ${m.home ? "selected" : ""}>At home</option><option value="0" ${m.home ? "" : "selected"}>Away</option></select></label>
+  <div class="row"><label>Date<input type="date" id="mdate" value="${m.date}"></label><label>Time<input type="time" id="mtime" value="${m.time}"></label></div>
+  <label>Venue (optional)<input type="text" id="mven" value="${esc(m.venue)}" autocomplete="off"></label>
+  <label>Competition (optional)<input type="text" id="mcomp" value="${esc(m.comp)}" autocomplete="off"></label>
+  <p class="err" id="err" role="alert"></p>
+  <div class="actions">
+    <button class="primary" id="msave">Save match</button>
+    <button id="mcancel">Cancel</button>
+    ${m.id ? `<button class="danger" id="mdel">Delete match</button>` : ""}
+  </div></div>`;
+}
+
+function bindM(){
+  const err = x => { $("#err").textContent = x; };
+  const m = mdraft;
+  $("#mopp").onchange = e => { m.opp = e.target.value; $("#newopp").hidden = m.opp !== "__new"; };
+  $("#onm").oninput = e => m.nn = e.target.value;
+  $("#ofile").onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { m.nl = await toLogo(f); const p = $("#oprev"); p.src = m.nl; p.hidden = false; err(""); }
+    catch(x){ err("That image couldn’t be read. Try a PNG or JPG."); }
+  };
+  $("#mhome").onchange = e => m.home = e.target.value === "1";
+  $("#mdate").oninput = e => m.date = e.target.value;
+  $("#mtime").oninput = e => m.time = e.target.value;
+  $("#mven").oninput = e => m.venue = e.target.value;
+  $("#mcomp").oninput = e => m.comp = e.target.value;
+  $("#mcancel").onclick = () => { mdraft = null; render(); };
+  $("#msave").onclick = () => {
+    if (!m.opp) return err("Choose the opponent.");
+    if (!m.date) return err("Pick the match date.");
+    if (m.opp === "__new"){
+      const n = (m.nn || "").trim();
+      if (!n) return err("Add the opponent’s name in Greek.");
+      if (!m.nl) return err("Add the opponent’s logo. Every graphic needs it.");
+      const o = {id: Date.now().toString(36) + "o", name: n, logo: m.nl};
+      opps.push(o); m.opp = o.id;
+      if (!saveO()) return err("Couldn’t save the opponent on this device.");
+    }
+    const c = cur(); c.matches = c.matches || [];
+    const rec = {id: m.id, opp: m.opp, home: m.home, date: m.date, time: m.time, venue: m.venue.trim(), comp: m.comp.trim(), lineup: m.lineup, score: m.score, goals: m.goals};
+    if (!rec.id){ rec.id = Date.now().toString(36); c.matches.push(rec); }
+    else c.matches = c.matches.map(x => x.id === rec.id ? rec : x);
+    if (!save()) return err("Couldn’t save on this device.");
+    mdraft = null; render();
+  };
+  const d = $("#mdel");
+  if (d) d.onclick = () => {
+    if (d.dataset.sure){ const c = cur(); c.matches = c.matches.filter(x => x.id !== m.id); save(); mdraft = null; render(); }
+    else { d.dataset.sure = 1; d.textContent = "Tap again to delete"; }
+  };
+}
+
+let gview = null;
+const up = s => s.toUpperCase().normalize("NFD").replace(/\u0301/g, "").normalize("NFC");
+const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+function lum(h){ const n = parseInt(h.slice(1), 16), f = v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }; return .2126 * f(n >> 16) + .7152 * f((n >> 8) & 255) + .0722 * f(n & 255); }
+function mix(h, k){ const n = parseInt(h.slice(1), 16); return `rgb(${((n >> 16) * k) | 0},${(((n >> 8) & 255) * k) | 0},${((n & 255) * k) | 0})`; }
+function wrap(x, text, maxW){ const lines = []; let cur = ""; for (const w of text.split(" ")){ const t = cur ? cur + " " + w : w; if (x.measureText(t).width > maxW && cur){ lines.push(cur); cur = w; } else cur = t; } lines.push(cur); return lines; }
+function fitText(x, s, wt, size, max){ do { x.font = `${wt} ${size}px Commissioner, sans-serif`; size -= 2; } while (x.measureText(s).width > max && size > 20); }
+
+function daysTo(d){ const a = new Date(d + "T00:00"), b = new Date(); b.setHours(0, 0, 0, 0); return Math.round((a - b) / 864e5); }
+function hypeLabel(d, lang){
+  const n = daysTo(d), el = lang === "el";
+  if (n < 0) return el ? "ΗΜΕΡΑ ΑΓΩΝΑ" : "MATCHDAY";
+  if (n === 0) return el ? "ΣΗΜΕΡΑ" : "TODAY";
+  if (n === 1) return el ? "ΑΥΡΙΟ" : "TOMORROW";
+  return el ? `ΜΕΝΟΥΝ ${n} ΜΕΡΕΣ` : `${n} DAYS TO GO`;
+}
+
+function drawMatchday({c, o, m, la, lb, fmt, lang, type}){
+  const W = 1080, H = fmt === "story" ? 1920 : 1350;
+  const L = fmt === "story" ? {lab: 330, comp: 395, cy: 800, date: 1300, time: 1440, ven: 1525} : {lab: 150, comp: 215, cy: 520, date: 1010, time: 1150, ven: 1235};
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const x = cv.getContext("2d");
+  x.imageSmoothingQuality = "high";
+  const light = lum(c.c1) > .45, txt = light ? "#10141f" : "#ffffff";
+  const acc = Math.abs(lum(c.c2) - lum(c.c1)) > .25 ? c.c2 : txt;
+  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c.c1); g.addColorStop(1, mix(c.c1, light ? .8 : .45));
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.strokeStyle = txt; x.globalAlpha = .1; x.lineWidth = 6;
+  x.beginPath(); x.moveTo(0, L.cy); x.lineTo(W, L.cy); x.stroke();
+  x.beginPath(); x.arc(W / 2, L.cy, 430, 0, Math.PI * 2); x.stroke();
+  x.globalAlpha = 1; x.textAlign = "center"; x.textBaseline = "alphabetic";
+  x.fillStyle = acc; x.font = "800 92px Commissioner, sans-serif";
+  if ("letterSpacing" in x) x.letterSpacing = "6px";
+  const lab = type === "hype" ? hypeLabel(m.date, lang) : (lang === "el" ? "ΗΜΕΡΑ ΑΓΩΝΑ" : "MATCHDAY");
+  fitText(x, lab, 800, 92, 940); x.fillText(lab, W / 2, L.lab);
+  if ("letterSpacing" in x) x.letterSpacing = "0px";
+  if (m.comp){ x.fillStyle = txt; x.globalAlpha = .85; x.font = "600 44px Commissioner, sans-serif"; x.fillText(up(m.comp), W / 2, L.comp); x.globalAlpha = 1; }
+  const us = [c, la], them = [o, lb], left = m.home ? us : them, right = m.home ? them : us;
+  [[left, W * .25], [right, W * .75]].forEach(([t, px]) => {
+    x.fillStyle = "rgba(255,255,255,.95)"; x.beginPath(); x.arc(px, L.cy, 185, 0, Math.PI * 2); x.fill();
+    const im = t[1], s = Math.min(290 / im.width, 290 / im.height);
+    x.drawImage(im, px - im.width * s / 2, L.cy - im.height * s / 2, im.width * s, im.height * s);
+    let sz = 56; x.font = `800 ${sz}px Commissioner, sans-serif`;
+    let lines = wrap(x, up(t[0].name), 450);
+    while (lines.length > 2 && sz > 32){ sz -= 4; x.font = `800 ${sz}px Commissioner, sans-serif`; lines = wrap(x, up(t[0].name), 450); }
+    x.fillStyle = txt;
+    lines.forEach((ln, i) => x.fillText(ln, px, L.cy + 270 + i * sz * 1.2));
+  });
+  x.fillStyle = acc; x.font = "800 64px Commissioner, sans-serif"; x.fillText("VS", W / 2, L.cy + 22);
+  const ds = up(new Date(m.date + "T00:00").toLocaleDateString(lang === "el" ? "el-GR" : "en-GB", {weekday: "long", day: "numeric", month: "long"}));
+  x.fillStyle = txt; fitText(x, ds, 800, 64, 960); x.fillText(ds, W / 2, L.date);
+  if (m.time){ x.fillStyle = acc; x.font = "800 150px Commissioner, sans-serif"; x.fillText(m.time, W / 2, L.time); }
+  if (m.venue){ const v = up(m.venue); x.fillStyle = txt; x.globalAlpha = .9; fitText(x, v, 600, 44, 960); x.fillText(v, W / 2, L.ven); x.globalAlpha = 1; }
+  return cv;
+}
+
+const mv = s => { const p = String(s || "").split("+"); return (parseInt(p[0]) || 0) + (parseInt(p[1]) || 0) / 100; };
+
+function goalsUI(c, m){
+  const box = $("#gbox"), on = gview.type === "ht" || gview.type === "ft";
+  box.hidden = !on; if (!on) return;
+  const o = opps.find(z => z.id === m.opp) || {name: "?"};
+  const gl = m.goals = m.goals || [];
+  const first = z => (parseInt(z.min) || 99) <= 45;
+  const sync = () => {
+    m.score = m.score || {};
+    const put = (k, f) => { const s = m.score[k] = m.score[k] || {}; s.us = gl.filter(z => z.side === "us" && f(z)).length; s.them = gl.filter(z => z.side === "them" && f(z)).length; };
+    put("ft", () => true); put("ht", first);
+  };
+  const rs = () => { const s = (m.score || {})[gview.type]; if (s && $("#sus")){ $("#sus").value = s.us; $("#sthem").value = s.them; } };
+  const ps = [...(c.players || [])].sort((a, b) => (+a.num || 999) - (+b.num || 999));
+  const nameOf = g => g.side === "us" ? ((c.players || []).find(p => p.id === g.pid) || {name: "?"}).name : (g.name || "?");
+  const paint = (side = "us") => {
+    const list = gl.map(g => `<div class="gl"><span>${esc(g.min || "–")}’ ${esc(nameOf(g))}${g.kind === "pen" ? " (penalty)" : g.kind === "og" ? " (own goal)" : ""}, ${esc(g.side === "us" ? c.name : o.name)}</span><button data-gdel="${g.id}">Remove</button></div>`).join("");
+    box.innerHTML = `<div class="form">
+    <div class="row"><label>Team<select id="gside"><option value="us">${esc(c.name)}</option><option value="them">${esc(o.name)}</option></select></label><label>Minute<input type="text" inputmode="numeric" maxlength="5" id="gmin"></label></div>
+    <label id="gplw">Scorer<select id="gpl">${ps.map(p => `<option value="${p.id}">${esc(String(p.num || "–"))} ${esc(p.name)}</option>`).join("")}</select></label>
+    <label id="gnmw" hidden>Scorer (Greek)<input type="text" id="gnm" autocomplete="off"></label>
+    <label>Type<select id="gkind"><option value="">Goal</option><option value="pen">Penalty</option><option value="og">Own goal</option></select></label>
+    <p class="err" id="gerr" role="alert"></p>
+    <button class="primary" id="gadd">Add goal</button></div>${list}`;
+    const sw = () => { const us = $("#gside").value === "us"; $("#gplw").hidden = !us; $("#gnmw").hidden = us; };
+    $("#gside").value = side; sw();
+    $("#gside").onchange = sw;
+    $("#gadd").onclick = () => {
+      const s = $("#gside").value, g = {id: Date.now().toString(36), side: s, min: $("#gmin").value.replace(/[^\d+]/g, ""), kind: $("#gkind").value};
+      if (s === "us"){ g.pid = $("#gpl").value; if (!g.pid){ $("#gerr").textContent = "Add players to this club first."; return; } }
+      else { g.name = $("#gnm").value.trim(); if (!g.name){ $("#gerr").textContent = "Type the scorer’s name in Greek."; return; } }
+      gl.push(g); sync(); save(); paint(s); rs(); draw();
+    };
+    box.querySelectorAll("[data-gdel]").forEach(b => b.onclick = () => {
+      const i = gl.findIndex(g => g.id === b.dataset.gdel); if (i > -1) gl.splice(i, 1);
+      sync(); save(); paint(); rs(); draw();
+    });
+  };
+  paint();
+}
+
+function drawScorers({c, o, m, la, lb, fmt, lang, type}){
+  const W = 1080, story = fmt === "story", H = story ? 1920 : 1350;
+  const L = story ? {lab: 330, comp: 395, cy: 690, names: 880, list: 960, row: 80, max: 540, date: 1560} : {lab: 150, comp: 215, cy: 420, names: 610, list: 690, row: 64, max: 520, date: 1305};
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const x = cv.getContext("2d");
+  x.imageSmoothingQuality = "high";
+  const light = lum(c.c1) > .45, txt = light ? "#10141f" : "#ffffff";
+  const acc = Math.abs(lum(c.c2) - lum(c.c1)) > .25 ? c.c2 : txt;
+  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c.c1); g.addColorStop(1, mix(c.c1, light ? .8 : .45));
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.textAlign = "center"; x.textBaseline = "alphabetic";
+  const lab = type === "ht" ? (lang === "el" ? up("ημίχρονο") : "HALF TIME") : (lang === "el" ? up("τελικό αποτέλεσμα") : "FULL TIME");
+  x.fillStyle = acc;
+  if ("letterSpacing" in x) x.letterSpacing = "6px";
+  fitText(x, lab, 800, 92, 940); x.fillText(lab, W / 2, L.lab);
+  if ("letterSpacing" in x) x.letterSpacing = "0px";
+  if (m.comp){ x.fillStyle = txt; x.globalAlpha = .85; x.font = "600 44px Commissioner, sans-serif"; x.fillText(up(m.comp), W / 2, L.comp); x.globalAlpha = 1; }
+  const gl = (m.goals || []).filter(z => type !== "ht" || (parseInt(z.min) || 99) <= 45), sc = (m.score && m.score[type]) || {us: 0, them: 0}, cnt = s => (s === "us" ? +sc.us : +sc.them) || 0;
+  const us = {t: c, im: la, side: "us"}, them = {t: o, im: lb, side: "them"}, left = m.home ? us : them, right = m.home ? them : us;
+  [[left, 190], [right, 890]].forEach(([k, px]) => {
+    x.fillStyle = "rgba(255,255,255,.95)"; x.beginPath(); x.arc(px, L.cy, 100, 0, Math.PI * 2); x.fill();
+    const s = Math.min(150 / k.im.width, 150 / k.im.height);
+    x.drawImage(k.im, px - k.im.width * s / 2, L.cy - k.im.height * s / 2, k.im.width * s, k.im.height * s);
+  });
+  const sTxt = `${cnt(left.side)} – ${cnt(right.side)}`;
+  x.fillStyle = acc; fitText(x, sTxt, 800, 220, 480); x.fillText(sTxt, W / 2, L.cy + 72);
+  const nameOf = z => z.side === "us" ? ((c.players || []).find(p => p.id === z.pid) || {name: "?"}).name : (z.name || "?");
+  [[left, W * .25], [right, W * .75]].forEach(([k, px]) => {
+    const tn = up(k.t.name); x.fillStyle = txt; fitText(x, tn, 800, 40, 450); x.fillText(tn, px, L.names);
+    const rows = gl.filter(z => z.side === k.side).sort((a, b) => mv(a.min) - mv(b.min));
+    const rh = Math.min(L.row, L.max / Math.max(rows.length, 1)), sz = Math.round(rh * .66);
+    rows.forEach((z, i) => {
+      const tag = z.kind === "pen" ? (lang === "el" ? " (Π)" : " (P)") : z.kind === "og" ? (lang === "el" ? " (ΑΓ)" : " (OG)") : "";
+      const s = up(nameOf(z).trim().split(/\s+/).pop()) + (z.min ? " " + z.min + "’" : "") + tag;
+      x.fillStyle = txt; fitText(x, s, 800, sz, 460); x.fillText(s, px, L.list + i * rh + rh * .7);
+    });
+  });
+  const ds = up(new Date(m.date + "T00:00").toLocaleDateString(lang === "el" ? "el-GR" : "en-GB", {weekday: "long", day: "numeric", month: "long"}));
+  x.fillStyle = txt; fitText(x, ds, 800, 44, 960); x.fillText(ds, W / 2, L.date);
+  return cv;
+}
+
+function scoreUI(c, m){
+  goalsUI(c, m);
+  const box = $("#sbox"), t = gview.type, on = t === "ht" || t === "ft";
+  box.hidden = !on; if (!on) return;
+  const o = opps.find(z => z.id === m.opp);
+  m.score = m.score || {};
+  const sc = m.score[t] = m.score[t] || {us: 0, them: 0};
+  box.innerHTML = `<div class="row"><label>${esc(c.name)}<input type="text" inputmode="numeric" maxlength="2" id="sus" value="${sc.us}"></label><label>${esc(o ? o.name : "")}<input type="text" inputmode="numeric" maxlength="2" id="sthem" value="${sc.them}"></label></div>`;
+  const bind = (id, k) => {
+    $(id).onfocus = e => e.target.select();
+    $(id).oninput = e => { const v = e.target.value.replace(/\D/g, ""); e.target.value = v; sc[k] = +v || 0; save(); draw(); };
+  };
+  bind("#sus", "us"); bind("#sthem", "them");
+}
+
+function drawScore({c, o, m, la, lb, fmt, lang, type}){
+  const W = 1080, story = fmt === "story", H = story ? 1920 : 1350;
+  const L = story ? {lab: 330, comp: 395, cy: 720, score: 1420, date: 1570} : {lab: 150, comp: 215, cy: 450, score: 1050, date: 1240};
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const x = cv.getContext("2d");
+  x.imageSmoothingQuality = "high";
+  const light = lum(c.c1) > .45, txt = light ? "#10141f" : "#ffffff";
+  const acc = Math.abs(lum(c.c2) - lum(c.c1)) > .25 ? c.c2 : txt;
+  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c.c1); g.addColorStop(1, mix(c.c1, light ? .8 : .45));
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.textAlign = "center"; x.textBaseline = "alphabetic";
+  const lab = type === "ht" ? (lang === "el" ? up("ημίχρονο") : "HALF TIME") : (lang === "el" ? up("τελικό αποτέλεσμα") : "FULL TIME");
+  x.fillStyle = acc;
+  if ("letterSpacing" in x) x.letterSpacing = "6px";
+  fitText(x, lab, 800, 92, 940); x.fillText(lab, W / 2, L.lab);
+  if ("letterSpacing" in x) x.letterSpacing = "0px";
+  if (m.comp){ x.fillStyle = txt; x.globalAlpha = .85; x.font = "600 44px Commissioner, sans-serif"; x.fillText(up(m.comp), W / 2, L.comp); x.globalAlpha = 1; }
+  const sc = (m.score && m.score[type]) || {us: 0, them: 0};
+  const us = [c, la, +sc.us || 0], them = [o, lb, +sc.them || 0], left = m.home ? us : them, right = m.home ? them : us;
+  [[left, W * .25], [right, W * .75]].forEach(([t, px]) => {
+    x.fillStyle = "rgba(255,255,255,.95)"; x.beginPath(); x.arc(px, L.cy, 150, 0, Math.PI * 2); x.fill();
+    const im = t[1], s = Math.min(230 / im.width, 230 / im.height);
+    x.drawImage(im, px - im.width * s / 2, L.cy - im.height * s / 2, im.width * s, im.height * s);
+    let sz = 52; x.font = `800 ${sz}px Commissioner, sans-serif`;
+    let lines = wrap(x, up(t[0].name), 450);
+    while (lines.length > 2 && sz > 30){ sz -= 4; x.font = `800 ${sz}px Commissioner, sans-serif`; lines = wrap(x, up(t[0].name), 450); }
+    x.fillStyle = txt;
+    lines.forEach((ln, i) => x.fillText(ln, px, L.cy + 225 + i * sz * 1.2));
+  });
+  const sTxt = `${left[2]} – ${right[2]}`;
+  x.fillStyle = acc; fitText(x, sTxt, 800, 300, 900); x.fillText(sTxt, W / 2, L.score);
+  const ds = up(new Date(m.date + "T00:00").toLocaleDateString(lang === "el" ? "el-GR" : "en-GB", {weekday: "long", day: "numeric", month: "long"}));
+  x.fillStyle = txt; fitText(x, ds, 800, 44, 960); x.fillText(ds, W / 2, L.date);
+  return cv;
+}
+
+function bkUI(){
+  const box = $("#bk");
+  box.className = "form";
+  box.innerHTML = `<b>Backup</b><p class="hint">Saves all clubs, players, matches, and logos in one file. Keep a copy somewhere safe.</p>
+  <div class="actions"><button id="bksave">Save backup</button><button id="bkload">Restore backup</button></div>
+  <input type="file" id="bkfile" accept=".json,application/json" hidden>
+  <p class="err" id="bkmsg" role="status"></p>
+  <button class="danger" id="bkgo" hidden>Replace everything with this backup</button>`;
+  let pend = null;
+  const msg = (t, bad) => { const p = $("#bkmsg"); p.textContent = t; p.style.color = bad ? "" : "var(--mute)"; };
+  $("#bksave").onclick = async () => {
+    const name = `club-graphics-backup-${new Date().toLocaleDateString("sv-SE")}.json`, json = JSON.stringify({v: 1, clubs, opps});
+    try {
+      const dl = window.claude && claude.use ? await claude.use("downloads") : null;
+      if (dl) await dl.save({filename: name, data: json});
+      else { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([json], {type: "application/json"})); a.download = name; a.click(); }
+      msg("Backup saved.");
+    } catch(e){ if (!e || e.code !== "declined") msg("Couldn’t save the backup. Try again.", 1); }
+  };
+  $("#bkload").onclick = () => $("#bkfile").click();
+  $("#bkfile").onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    try {
+      const d = JSON.parse(await f.text());
+      if (!d || !Array.isArray(d.clubs) || !Array.isArray(d.opps)) throw 0;
+      pend = d; $("#bkgo").hidden = false;
+      msg(`Found ${d.clubs.length} club${d.clubs.length === 1 ? "" : "s"} in this backup. Restoring replaces everything on this device.`);
+    } catch(x){ pend = null; $("#bkgo").hidden = true; msg("That file isn’t a valid backup.", 1); }
+  };
+  $("#bkgo").onclick = () => {
+    if (!pend) return;
+    const oc = clubs, oo = opps;
+    clubs = pend.clubs; opps = pend.opps;
+    if (!save() || !saveO()){ clubs = oc; opps = oo; msg("Not enough space on this device to restore.", 1); return; }
+    pend = null; $("#bkgo").hidden = true; msg("Backup restored."); render();
+  };
+}
+
+const FORMS = ["4-4-2", "4-3-3", "4-2-3-1", "3-5-2", "3-4-3", "4-5-1", "5-3-2", "4-1-4-1"];
+
+function drawPitch({x, c, m, ids, lang, acc, txt, L, story, W, ph, cv}){
+  const PX = 60, PW = 960, PY = L.y - 10, PH = story ? 850 : 860;
+  x.save(); x.strokeStyle = txt; x.globalAlpha = .3; x.lineWidth = 5;
+  x.strokeRect(PX, PY, PW, PH);
+  x.beginPath(); x.moveTo(PX, PY + PH / 2); x.lineTo(PX + PW, PY + PH / 2); x.stroke();
+  x.beginPath(); x.arc(W / 2, PY + PH / 2, 100, 0, Math.PI * 2); x.stroke();
+  x.strokeRect(W / 2 - 230, PY, 460, 150); x.strokeRect(W / 2 - 230, PY + PH - 150, 460, 150);
+  x.restore();
+  const f = (m.lineup.formation || "4-4-2").split("-").map(Number), k = f.length;
+  const po = p => ({GK: 0, DEF: 1, MID: 2, FWD: 3}[p.pos] ?? 4);
+  const ps = (c.players || []).filter(p => ids.includes(p.id)).sort((a, b) => po(a) - po(b) || (+a.num || 999) - (+b.num || 999)).slice(0, 11);
+  let n = 0;
+  [1, ...f].forEach((cnt, b) => {
+    const row = ps.slice(n, n + cnt); n += cnt;
+    const y = PY + 50 + (k - b + .5) * ((PH - 100) / (k + 1));
+    row.forEach((p, j) => {
+      const px = PX + (j + .5) * PW / row.length, im = ph[p.id];
+      x.textAlign = "center";
+      if (im){
+        const s = Math.max(88 / im.width, 88 / im.height);
+        x.save(); x.beginPath(); x.arc(px, y, 44, 0, Math.PI * 2); x.clip();
+        x.drawImage(im, px - im.width * s / 2, y - im.height * s / 2, im.width * s, im.height * s); x.restore();
+        x.strokeStyle = acc; x.lineWidth = 6; x.beginPath(); x.arc(px, y, 44, 0, Math.PI * 2); x.stroke();
+      } else {
+        x.fillStyle = acc; x.beginPath(); x.arc(px, y, 44, 0, Math.PI * 2); x.fill();
+        x.fillStyle = lum(acc) > .45 ? "#10141f" : "#ffffff"; x.font = "800 40px Commissioner, sans-serif"; x.fillText(p.num || "–", px, y + 14);
+      }
+      const nm = (im && p.num ? p.num + " " : "") + up(p.name.trim().split(/\s+/).pop());
+      x.fillStyle = txt; fitText(x, nm, 800, 30, PW / row.length - 12); x.fillText(nm, px, y + 78);
+    });
+  });
+  const ds = up(new Date(m.date + "T00:00").toLocaleDateString(lang === "el" ? "el-GR" : "en-GB", {weekday: "long", day: "numeric", month: "long"})) + (m.time ? ", " + m.time : "");
+  x.fillStyle = txt; x.textAlign = "center"; fitText(x, ds, 800, 44, 960); x.fillText(ds, W / 2, L.foot);
+  return cv;
+}
+
+function lineupUI(c, m){
+  const box = $("#lbox"), on = gview.type === "lineup";
+  box.hidden = !on; if (!on) return;
+  const ln = m.lineup = m.lineup || {ids: []};
+  const ps = [...(c.players || [])].sort((a, b) => (+a.num || 999) - (+b.num || 999));
+  if (!ps.length){ box.innerHTML = `<p class="hint">Add players to this club first, in the Players tab.</p>`; return; }
+  box.innerHTML = `<div class="row"><label>Style<select id="lstyle"><option value="list">List</option><option value="pitch">Pitch</option></select></label><label>Formation<select id="lform">${FORMS.map(f => `<option>${f}</option>`).join("")}</select></label></div><details ${ln.ids.length ? "" : "open"}><summary id="lcount"></summary>${ps.map(p => `<label class="pick"><input type="checkbox" value="${p.id}" ${ln.ids.includes(p.id) ? "checked" : ""}><span>${esc(String(p.num || "–"))}</span>${esc(p.name)}</label>`).join("")}</details>`;
+  const upd = () => { $("#lcount").textContent = `Choose players (${ln.ids.length}/11)`; };
+  upd();
+  $("#lstyle").value = ln.style || "list"; $("#lform").value = ln.formation || "4-4-2"; $("#lform").disabled = ln.style !== "pitch";
+  $("#lstyle").onchange = e => { ln.style = e.target.value; $("#lform").disabled = ln.style !== "pitch"; save(); draw(); };
+  $("#lform").onchange = e => { ln.formation = e.target.value; save(); draw(); };
+  box.querySelectorAll("input[type=checkbox]").forEach(i => i.onchange = () => {
+    ln.ids = [...box.querySelectorAll("input:checked")].map(z => z.value);
+    save(); upd(); draw();
+  });
+}
+
+function drawLineup({c, o, m, la, fmt, lang, ph}){
+  const W = 1080, story = fmt === "story", H = story ? 1920 : 1350;
+  const L = story ? {logo: 360, lab: 540, sub: 600, y: 650, row: 80, foot: 1575} : {logo: 125, lab: 280, sub: 340, y: 390, row: 72, foot: 1290};
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const x = cv.getContext("2d");
+  x.imageSmoothingQuality = "high";
+  const light = lum(c.c1) > .45, txt = light ? "#10141f" : "#ffffff";
+  const acc = Math.abs(lum(c.c2) - lum(c.c1)) > .25 ? c.c2 : txt;
+  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c.c1); g.addColorStop(1, mix(c.c1, light ? .8 : .45));
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.textAlign = "center"; x.textBaseline = "alphabetic";
+  x.fillStyle = "rgba(255,255,255,.95)"; x.beginPath(); x.arc(W / 2, L.logo, 80, 0, Math.PI * 2); x.fill();
+  const s = Math.min(130 / la.width, 130 / la.height);
+  x.drawImage(la, W / 2 - la.width * s / 2, L.logo - la.height * s / 2, la.width * s, la.height * s);
+  x.fillStyle = acc;
+  if ("letterSpacing" in x) x.letterSpacing = "6px";
+  const lab = lang === "el" ? "ΒΑΣΙΚΗ ΕΝΔΕΚΑΔΑ" : "STARTING XI";
+  fitText(x, lab, 800, 76, 940); x.fillText(lab, W / 2, L.lab);
+  if ("letterSpacing" in x) x.letterSpacing = "0px";
+  const sub = up(m.home ? c.name + " – " + o.name : o.name + " – " + c.name);
+  x.fillStyle = txt; x.globalAlpha = .85; fitText(x, sub, 600, 44, 960); x.fillText(sub, W / 2, L.sub); x.globalAlpha = 1;
+  const ids = (m.lineup && m.lineup.ids) || [];
+  if (m.lineup && m.lineup.style === "pitch") return drawPitch({x, c, m, ids, lang, acc, txt, L, story, W, ph: ph || {}, cv});
+  const ps = (c.players || []).filter(p => ids.includes(p.id)).sort((a, b) => (+a.num || 999) - (+b.num || 999));
+  if (!ps.length){ x.fillStyle = txt; x.globalAlpha = .7; x.font = "600 48px Commissioner, sans-serif"; x.fillText("Choose the players", W / 2, L.y + 100); x.globalAlpha = 1; }
+  const rowH = L.row * Math.min(1, 11 / Math.max(ps.length, 1)), r = rowH * .36, sz = Math.round(rowH * .6);
+  ps.forEach((p, i) => {
+    const cy = L.y + i * rowH + rowH / 2;
+    x.fillStyle = acc; x.beginPath(); x.arc(230, cy, r, 0, Math.PI * 2); x.fill();
+    x.fillStyle = lum(acc) > .45 ? "#10141f" : "#ffffff"; x.textAlign = "center"; x.font = `800 ${Math.round(r * 1.1)}px Commissioner, sans-serif`;
+    x.fillText(p.num || "–", 230, cy + r * .38);
+    const n = up(p.name); x.fillStyle = txt; x.textAlign = "left"; fitText(x, n, 800, sz, 720); x.fillText(n, 310, cy + sz * .35);
+  });
+  x.textAlign = "center";
+  const ds = up(new Date(m.date + "T00:00").toLocaleDateString(lang === "el" ? "el-GR" : "en-GB", {weekday: "long", day: "numeric", month: "long"})) + (m.time ? ", " + m.time : "");
+  x.fillStyle = txt; fitText(x, ds, 800, 44, 960); x.fillText(ds, W / 2, L.foot);
+  return cv;
+}
+
+async function draw(){
+  const c = cur(), m = c.matches.find(z => z.id === gview.mid), o = opps.find(z => z.id === m.opp);
+  const sample = "ΑΒΓΔαβγδ ABCabc 0123";
+  await document.fonts.load("800 64px Commissioner", sample);
+  await document.fonts.load("600 44px Commissioner", sample);
+  const [la, lb] = await Promise.all([loadImg(c.logo), loadImg(o.logo)]);
+  if (!gview || !$("#gimg")) return;
+  const args = {c, o, m, la, lb, fmt: gview.fmt, lang: gview.lang, type: gview.type};
+  if (gview.type === "lineup"){
+    const ln = m.lineup || {}; args.ph = {};
+    if (ln.style === "pitch") await Promise.all((c.players || []).filter(p => p.photo && (ln.ids || []).includes(p.id)).map(async p => { try { args.ph[p.id] = await loadImg(p.photo); } catch(e){} }));
+    if (!gview || !$("#gimg")) return;
+  }
+  gview.cv = gview.type === "lineup" ? drawLineup(args) : (gview.type === "ht" || gview.type === "ft") ? ((m.goals || []).some(z => gview.type !== "ht" || (parseInt(z.min) || 99) <= 45) ? drawScorers(args) : drawScore(args)) : drawMatchday(args);
+  $("#gimg").src = gview.cv.toDataURL("image/png");
+}
+
+function renderGraphic(){
+  const c = cur(), m = c.matches.find(z => z.id === gview.mid);
+  $("#head").innerHTML = `<div class="top"><button data-gback="1">Back</button><h1>Graphics</h1><button data-medit="${m.id}">Edit match</button></div>`;
+  $("#add").hidden = true; $("#formWrap").innerHTML = "";
+  $("#list").innerHTML = `<div class="form">
+  <label>Graphic<select id="gtype"><option value="matchday">Matchday</option><option value="hype">Next match countdown</option><option value="lineup">Starting lineup</option><option value="ht">Half time score</option><option value="ft">Final score</option></select></label>
+  <div class="row">
+    <label>Format<select id="gfmt"><option value="post">Post (4:5)</option><option value="story">Story (9:16)</option></select></label>
+    <label>Language<select id="glang"><option value="el">Greek</option><option value="en">English</option></select></label>
+  </div>
+  
+  <div id="sbox" hidden></div>
+  <div id="gbox" hidden></div>
+  <div id="lbox" hidden></div>
+  <img id="gimg" class="gimg" alt="Graphic preview">
+  <p class="hint" id="hint">Press and hold the image to save it, or use Save image.</p>
+  <button class="primary" id="gsave">Save image</button>
+  </div>`;
+  $("#gfmt").value = gview.fmt; $("#glang").value = gview.lang; $("#gtype").value = gview.type;
+  $("#gtype").onchange = e => { gview.type = e.target.value; lineupUI(c, m); scoreUI(c, m); draw(); };
+  scoreUI(c, m);
+  lineupUI(c, m);
+  $("#gfmt").onchange = e => { gview.fmt = e.target.value; draw(); };
+  $("#glang").onchange = e => { gview.lang = e.target.value; draw(); };
+  $("#gsave").onclick = async () => {
+    const blob = await new Promise(r => gview.cv.toBlob(r, "image/png"));
+    const file = new File([blob], `${gview.type}-${gview.fmt}.png`, {type: "image/png"});
+    try {
+      if (navigator.canShare && navigator.canShare({files: [file]})) await navigator.share({files: [file]});
+      else $("#hint").textContent = "Sharing isn’t available here. Press and hold the image to save it.";
+    } catch(e){}
+  };
+  draw();
+}
+
+$("#head").onclick = e => $("#list").onclick(e);
+bkUI();
+render();
+</script>
+</body>
+</html>
